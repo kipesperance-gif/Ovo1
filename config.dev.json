@@ -40,8 +40,8 @@
   "credentials": {
     "gmailAccount": {
       "email": "andylabaco@gmail.com",
-      "clientId": "96871167660-5js0qjdlpr2mcd331kv5obpifev5j69r.apps.googleusercontent.com",
-      "clientSecret": "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",
+      "clientId": "683571254262-gaq5glm6ml7481c9jlgi6ru3fi68k7d1.apps.googleusercontent.com",
+      "clientSecret": "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",
       "refreshToken": "1//04qK_zxJkdK7RCgYIARAAGAQSNwF-L9IrZOdI4prCgpqvAoDEvn-HpuSugKxBTRNoGS37QwxfAWJUCehSKhdas26xOh-SjmdR4uw",
       "apiKey": ""
     },
