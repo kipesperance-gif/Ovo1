@@ -40,9 +40,9 @@
   "credentials": {
     "gmailAccount": {
       "email": "andylabaco@gmail.com",
-      "clientId": "683571254262-gaq5glm6ml7481c9jlgi6ru3fi68k7d1.apps.googleusercontent.com",
-      "clientSecret": "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",
-      "refreshToken": "1//04qK_zxJkdK7RCgYIARAAGAQSNwF-L9IrZOdI4prCgpqvAoDEvn-HpuSugKxBTRNoGS37QwxfAWJUCehSKhdas26xOh-SjmdR4uw",
+      "clientId": "393147848939-ntcurc2v973l21d0iaj8gdjtcsk3lkkc.apps.googleusercontent.com",
+      "clientSecret": "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",
+      "refreshToken": "1//040MV3vo7LVVqCgYIARAAGAQSNwF-L9IrM9QtFG0mL8K_5YzAKLs2G1i2bttn_JcB34C0tQIhgJO-MLPZb2Ix_Ky2JUoXOV0yt_I",
       "apiKey": ""
     },
     "gRecaptcha": {
