@@ -1,87 +1,86 @@
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+const yts = require("yt-search");
+
+const CACHE = path.join(__dirname, "cache");
+if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE);
 
 module.exports = {
- config: {
- name: "sing",
- version: "1.0",
- author: "Aryan Chauhan",
- countDown: 5,
- role: 0,
- shortDescription: "Sing with YouTube2 API",
- longDescription: "Play music from YouTube by searching with a query, using YouTube2 API.",
- category: "music",
- guide: {
- en: "{pn} <song name>\nExample: {pn} apt"
- }
- },
+  config: {
+    name: "sing",
+    version: "1.1",
+    author: "Aryan Chauhan",
+    role: 0,
+    category: "media",
+    guide: { en: "{pn} <song name>" }
+  },
 
- onStart: async function ({ api, event, args }) {
- const query = args.join(" ");
- if (!query) {
- return api.sendMessage(
- "⚠️ Please provide a song name!\nExample: sing apt",
- event.threadID,
- event.messageID
- );
- }
+  onStart: async function ({ api, event, args }) {
+    if (!args.length)
+      return api.sendMessage(
+        "❌ Song name missing.",
+        event.threadID,
+        event.messageID
+      );
 
- const tid = event.threadID;
- const filePath = path.join(__dirname, "sing.mp3");
+    api.setMessageReaction("⏳", event.messageID, () => {}, true);
 
- api.sendMessage(
- `🎤 Fetching YouTube song...\n🔍 Query: ${query}`,
- tid,
- async (err, info) => {
- if (err) return;
- const genMsgID = info.messageID;
-
- try {
- const { data } = await axios.get(
- `https://aryapio.onrender.com/play/youtube2?q=${encodeURIComponent(query)}&apikey=aryan123`
- );
-
- if (!data?.status || !data?.data?.audio) {
- api.sendMessage("❌ Failed to get audio link.", tid, event.messageID);
- return api.unsendMessage(genMsgID);
- }
-
- const response = await axios({
- method: "GET",
- url: data.data.audio,
- responseType: "stream"
- });
-
- const writer = fs.createWriteStream(filePath);
- response.data.pipe(writer);
-
- writer.on("finish", () => {
- api.sendMessage(
- {
- body: `✅ Here is your song!\n🎶 ${query}`,
- attachment: fs.createReadStream(filePath)
- },
- tid,
- () => {
- fs.unlinkSync(filePath);
- api.unsendMessage(genMsgID);
- },
- event.messageID
- );
- });
-
- writer.on("error", () => {
- api.sendMessage("❌ Failed to save audio file.", tid, event.messageID);
- api.unsendMessage(genMsgID);
- });
-
- } catch (err) {
- console.error(err);
- api.sendMessage("❌ Error: Unable to fetch song. Please try again later.", tid, event.messageID);
- api.unsendMessage(genMsgID);
- }
- }
- );
- }
+    try {
+      const a = await b(args.join(" "));
+      const c = await d(a.url);
+      await e(api, event, a, c);
+    } catch (err) {
+      console.error(err);
+      api.setMessageReaction("❌", event.messageID, () => {}, true);
+      api.sendMessage(
+        "❌ Failed to play song.",
+        event.threadID,
+        event.messageID
+      );
+    }
+  }
 };
+
+async function b(q) {
+  const r = await yts(q);
+  if (!r.videos || !r.videos[0]) throw "No result";
+  return r.videos[0];
+}
+
+async function d(url) {
+  const apiUrl =
+    "https://downvid.onrender.com/api/v1/download" +
+    `?url=${encodeURIComponent(url)}&format=mp3`;
+
+  const r = await axios.get(apiUrl);
+  if (r.data.status !== "success" || !r.data.downloadUrl)
+    throw "API error";
+
+  return r.data.downloadUrl;
+}
+
+async function e(api, event, video, dl) {
+  const p = path.join(CACHE, `${Date.now()}.mp3`);
+  const s = await axios.get(dl, { responseType: "stream" });
+
+  const w = fs.createWriteStream(p);
+  s.data.pipe(w);
+
+  w.on("finish", async () => {
+    api.setMessageReaction("✅", event.messageID, () => {}, true);
+    await api.sendMessage(
+      {
+        body: `🎶 ${video.title}`,
+        attachment: fs.createReadStream(p)
+      },
+      event.threadID,
+      event.messageID 
+    );
+    fs.unlinkSync(p);
+  });
+
+  w.on("error", () => {
+    api.setMessageReaction("❌", event.messageID, () => {}, true);
+  });
+}
