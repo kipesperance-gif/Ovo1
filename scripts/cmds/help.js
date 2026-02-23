@@ -3,165 +3,119 @@ const axios = require("axios");
 const path = require("path");
 const { getPrefix } = global.utils;
 const { commands, aliases } = global.GoatBot;
-
-const BOT_BRAND = "【 🤖 TEAM AVA | Hassan's Bot 】";
+const doNotDelete = "[ ncs pro bot]"; // changing this wont change the goatbot V2 of list cmd it is just a decoyy
 
 module.exports = {
   config: {
     name: "help",
-    version: "2.0",
-    author: "Hassan (AVA Edition)",
+    version: "1.17",
+    author: "𝗸𝗶𝗽𝗲", // original author Kshitiz 
     countDown: 5,
     role: 0,
-    description: {
-      en: "Show list of commands or details of a specific command"
+    shortDescription: {
+      en: "View command usage and list all commands directly",
+    },
+    longDescription: {
+      en: "View command usage and list all commands directly",
     },
     category: "info",
     guide: {
-      en: "{pn} [page]\n{pn} [command]"
-    }
+      en: "{pn} / help cmdName ",
+    },
+    priority: 1,
   },
 
-  langs: {
-    en: {
-      listPage: 
-`┌─「 ${BOT_BRAND} 」
-│ Commands list (Page %1/%2)
-│ Total available: %3
-│ Prefix: %4
-├─────────────────
-%5
-└─ Type %4help <command> for details`,
-      
-      listCategory: 
-`┌─「 ${BOT_BRAND} 」
-│ Grouped commands
-│ Total: %1
-├─────────────────
-%2
-└─ Type %3help <command>`,
-
-      notFound: "⚠️ Command '%1' not found.",
-      info: 
-`┌─「 COMMAND INFO 」
-│ Name: %1
-│ Description: %2
-│ Aliases: %3
-│ Local aliases: %4
-│ Version: %5
-│ Role: %6
-│ Cooldown: %7s
-│ Author: %8
-├─────────────────
-Usage:
-%9
-└─────────────────`,
-      onlyUsage: "📘 Usage:\n%1",
-      onlyInfo: "ℹ️ Info:\n- Name: %1\n- Description: %2\n- Aliases: %3\n- Version: %4\n- Role: %5",
-      onlyAlias: "🔑 Aliases: %1\nLocal aliases: %2",
-      onlyRole: "👤 Required role: %1",
-      doNotHave: "None",
-      roleText0: "0 (All users)",
-      roleText1: "1 (Group Admin)",
-      roleText2: "2 (Bot Admin)",
-      roleText0setRole: "0 (set role, all users)",
-      roleText1setRole: "1 (set role, group admins)",
-      pageNotFound: "❌ Page %1 does not exist"
-    }
-  },
-
-  onStart: async function ({ message, args, event, threadsData, getLang, role, globalData }) {
-    const langCode = await threadsData.get(event.threadID, "data.lang") || global.GoatBot.config.language;
+  onStart: async function ({ message, args, event, threadsData, role }) {
     const { threadID } = event;
-    const prefix = getPrefix(threadID);
-    let commandName = (args[0] || "").toLowerCase();
-
-    let command = commands.get(commandName) || commands.get(aliases.get(commandName));
-
-    // Search in custom aliases
     const threadData = await threadsData.get(threadID);
-    const aliasesData = threadData.data.aliases || {};
-    if (!command) {
-      for (const cmdName in aliasesData) {
-        if (aliasesData[cmdName].includes(commandName)) {
-          command = commands.get(cmdName);
-          break;
-        }
-      }
-    }
+    const prefix = getPrefix(threadID);
 
-    // Search in global aliases
-    if (!command) {
-      const globalAliasesData = await globalData.get('setalias', 'data', []);
-      for (const item of globalAliasesData) {
-        if (item.aliases.includes(commandName)) {
-          command = commands.get(item.commandName);
-          break;
-        }
-      }
-    }
+    if (args.length === 0) {
+      const categories = {};
+      let msg = "";
 
-    // Show command list
-    if (!command && (!args[0] || !isNaN(args[0]))) {
-      const arrayInfo = [];
-      const page = parseInt(args[0]) || 1;
-      const perPage = 20;
+      msg += ``; // replace with your name 
 
       for (const [name, value] of commands) {
         if (value.config.role > 1 && role < value.config.role) continue;
-        let desc = checkLangObject(value.config.description, langCode) || "";
-        arrayInfo.push(`${name} — ${desc}`);
+
+        const category = value.config.category || "Uncategorized";
+        categories[category] = categories[category] || { commands: [] };
+        categories[category].commands.push(name);
       }
 
-      arrayInfo.sort();
-      const totalPage = Math.ceil(arrayInfo.length / perPage);
-      if (page < 1 || page > totalPage) return message.reply(getLang("pageNotFound", page));
+      Object.keys(categories).forEach((category) => {
+        if (category !== "info") {
+          msg += `\n╭─────⭔『  ${category.toUpperCase()}  』`;
 
-      const pageItems = arrayInfo.slice((page - 1) * perPage, page * perPage).join("\n");
-      return message.reply(getLang("listPage", page, totalPage, arrayInfo.length, prefix, pageItems));
+
+          const names = categories[category].commands.sort();
+          for (let i = 0; i < names.length; i += 3) {
+            const cmds = names.slice(i, i + 2).map((item) => `✧${item}`);
+            msg += `\n│${cmds.join(" ".repeat(Math.max(1, 5 - cmds.join("").length)))}`;
+          }
+
+          msg += `\n╰────────────⭓`;
+        }
+      });
+
+      const totalCommands = commands.size;
+      msg += `\n\n╭─────⭔[ 𝗘𝗻𝗷𝗼𝘆 🍀 ]\n│> 𝗧𝗼𝘁𝗮𝗹 𝗰𝗺𝗱𝘀: [${totalCommands}].\n│𝗧𝘆𝗽𝗲: [ ${prefix}𝗵𝗲𝗹𝗽 𝘁𝗼 \n│<𝗰𝗺𝗱> 𝘁𝗼 𝗹𝗲𝗮𝗿𝗻 𝘁𝗵𝗲 𝘂𝘀𝗮𝗴𝗲.]\n╰────────────:)`;
+      msg += ``;
+      msg += `\n╭─────⭔\n│💫 | [𝘆𝗼𝘂𝗿 𝗯𝗮𝗯𝘆 𝗸𝗶𝗽𝗲💘]\n╰────────────:-)`; // its not decoy so change it if you want 
+
+
+      await message.reply({
+        body: msg,
+      });
+    } else {
+      const commandName = args[0].toLowerCase();
+      const command = commands.get(commandName) || commands.get(aliases.get(commandName));
+
+      if (!command) {
+        await message.reply(`Command "${commandName}" not found.`);
+      } else {
+        const configCommand = command.config;
+        const roleText = roleTextToString(configCommand.role);
+        const author = configCommand.author || "Unknown";
+
+        const longDescription = configCommand.longDescription ? configCommand.longDescription.en || "No description" : "No description";
+
+        const guideBody = configCommand.guide?.en || "No guide available.";
+        const usage = guideBody.replace(/{p}/g, prefix).replace(/{n}/g, configCommand.name);
+
+        const response = `╭── NAME ────⭓
+  │ ${configCommand.name}
+  ├── INFO
+  │ Description: ${longDescription}
+  │ Other names: ${configCommand.aliases ? configCommand.aliases.join(", ") : "Do not have"}
+  │ Other names in your group: Do not have
+  │ Version: ${configCommand.version || "1.0"}
+  │ Role: ${roleText}
+  │ Time per command: ${configCommand.countDown || 1}s
+  │ Author: ${author}
+  ├── Usage
+  │ ${usage}
+  ├── Notes
+  │ The content inside <XXXXX> can be changed
+  │ The content inside [a|b|c] is a or b or c
+  ╰━━━━━━━❖`;
+
+        await message.reply(response);
+      }
     }
-
-    // Command not found
-    if (!command) return message.reply(getLang("notFound", args[0]));
-
-    // Show command info
-    const cfg = command.config;
-    const guide = (cfg.guide?.[langCode] || cfg.guide?.en || "").replace(/\{pn\}/g, prefix + cfg.name);
-
-    const aliasesString = cfg.aliases?.join(", ") || getLang("doNotHave");
-    const localAlias = threadData.data.aliases?.[cfg.name]?.join(", ") || getLang("doNotHave");
-    let roleText = cfg.role === 0 ? getLang("roleText0") : cfg.role === 1 ? getLang("roleText1") : getLang("roleText2");
-
-    if (args[1]?.match(/^-u|usage$/)) {
-      return message.reply(getLang("onlyUsage", guide));
-    }
-    if (args[1]?.match(/^-i|info$/)) {
-      return message.reply(getLang("onlyInfo", cfg.name, cfg.description?.en || "", aliasesString, cfg.version, roleText));
-    }
-    if (args[1]?.match(/^-a|alias$/)) {
-      return message.reply(getLang("onlyAlias", aliasesString, localAlias));
-    }
-    if (args[1]?.match(/^-r|role$/)) {
-      return message.reply(getLang("onlyRole", roleText));
-    }
-
-    return message.reply(getLang(
-      "info",
-      cfg.name,
-      cfg.description?.en || "",
-      aliasesString,
-      localAlias,
-      cfg.version,
-      roleText,
-      cfg.countDown || 1,
-      cfg.author || "",
-      guide
-    ));
-  }
+  },
 };
 
-function checkLangObject(data, langCode) {
-  if (typeof data == "string") return data;
-  if (typeof data == "object" && !Array.isArray(data)) return data[langCode] || data.en || undefined;
-  return undefined;
-}
+function roleTextToString(roleText) {
+  switch (roleText) {
+    case 0:
+      return "0 (All users)";
+    case 1:
+      return "1 (Group administrators)";
+    case 2:
+      return "2 (Admin bot)";
+    default:
+      return "Unknown role";
+  }
+          }
